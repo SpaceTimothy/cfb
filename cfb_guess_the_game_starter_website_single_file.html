@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Guess the CFB Game — Multi Game</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --card:#111827; --muted:#6b7280; --text:#e5e7eb; --accent:#22d3ee; --good:#22c55e; --bad:#ef4444; --warn:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Inter,sans-serif; background:linear-gradient(180deg,#0b0f14,#0b0f14 40%,#111827); color:var(--text);} 
+    .wrap{max-width:920px; margin:0 auto; padding:24px;}
+    header{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+    h1{font-size:clamp(22px,3vw,32px); margin:0; letter-spacing:.3px}
+    .sub{color:var(--muted); font-size:14px}
+    .tabs{display:flex; gap:10px; margin-top:10px;}
+    .tab{padding:6px 12px; border-radius:8px; cursor:pointer; background:#1f2937; color:var(--text);} 
+    .tab.active{background:var(--accent); color:#001016; font-weight:700}
+    .card{background:var(--card); border:1px solid #1f2937; border-radius:18px; padding:18px; box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    label{color:var(--muted); font-size:13px; margin-right:4px}
+    select{flex:1; min-width:120px; background:#0f172a; color:var(--text); border:1px solid #243041; border-radius:12px; padding:8px 10px; font-size:15px; outline:none}
+    select.ok{border-color: var(--good)}
+    select.wrong{border-color: var(--bad)}
+    button{background:var(--accent); color:#001016; border:none; border-radius:12px; padding:12px 16px; font-weight:700; cursor:pointer}
+    button.secondary{background:#1f2937; color:var(--text); border:1px solid #2b3648}
+    button:disabled{opacity:.6; cursor:not-allowed}
+    .clues{display:grid; gap:10px; margin-top:14px}
+    .clue{background:#0f1622; border:1px dashed #223046; border-radius:14px; padding:12px; font-size:15px}
+    .clue.revealed{border-style:solid}
+    .tag{display:inline-block; padding:2px 8px; border-radius:999px; background:#0c1a2a; border:1px solid #1b2a3f; color:#a3b2c7; font-size:12px;}
+    .status{margin-top:12px; font-weight:600}
+    .status.good{color:var(--good)}
+    .status.bad{color:var(--bad)}
+    .status.partial{color:var(--warn)}
+    .footer{margin-top:18px; display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+    .share{white-space:pre-wrap; background:#0f172a; border:1px solid #223046; padding:10px; border-radius:12px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:13px}
+    .muted{color:var(--muted)}
+    .streak{font-weight:700}
+    .pill{display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px; border:1px solid #2a3444; background:#0d1725}
+    a{color:#7dd3fc}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Guess the CFB Game — Multi Game</h1>
+        <div class="sub">Pick Away, Home, and Year. Wrong guesses unlock clues. Switch games with tabs below.</div>
+        <div class="tabs">
+          <div class="tab active" data-game="2019-09-14">Game #1</div>
+          <div class="tab" data-game="2023-09-04">Game #2</div>
+          <div class="tab" data-game="2022-12-02">Game #3</div>
+          <div class="tab" data-game="2018-09-15">Game #4</div>
+        </div>
+      </div>
+      <div class="pill"><span>Streak:</span> <span class="streak" id="streak">0</span></div>
+    </header>
+
+    <main class="card" style="margin-top:16px">
+      <div class="row">
+        <label for="awaySel">Away</label>
+        <select id="awaySel"></select>
+        <label for="homeSel">Home</label>
+        <select id="homeSel"></select>
+        <label for="yearSel">Year</label>
+        <select id="yearSel"></select>
+        <button id="submit">Guess</button>
+        <button id="giveup" class="secondary">Reveal</button>
+      </div>
+
+      <div id="status" class="status"></div>
+
+      <div class="clues" id="clues"></div>
+
+      <div class="footer">
+        <button id="shareBtn" class="secondary" disabled>Share result</button>
+        <div id="shareOut" class="share" style="display:none"></div>
+      </div>
+    </main>
+
+    <script>
+  // --- TEAMS ---
+  const TEAMS = ["Air Force","Akron","Alabama","Appalachian State","Arizona","Arizona State","Arkansas","Arkansas State","Army","Auburn","Ball State","Baylor","Boise State","Boston College","Bowling Green","Buffalo","BYU","California","Central Michigan","Charlotte","Cincinnati","Clemson","Coastal Carolina","Colorado","Colorado State","Duke","East Carolina","Eastern Michigan","FIU","Florida","Florida Atlantic","Florida International","Florida State","Fresno State","Georgia","Georgia Southern","Georgia State","Georgia Tech","Hawai'i","Houston","Illinois","Indiana","Iowa","Iowa State","James Madison","Kansas","Kansas State","Kent State","Kentucky","Liberty","Louisiana","Louisiana-Monroe","Louisiana Tech","Louisville","LSU","Marshall","Maryland","Memphis","Miami (FL)","Miami (OH)","Michigan","Michigan State","Middle Tennessee","Minnesota","Mississippi State","Missouri","Navy","Nebraska","Nevada","New Mexico","New Mexico State","North Carolina","NC State","North Texas","Northern Illinois","Northwestern","Notre Dame","Ohio","Ohio State","Oklahoma","Oklahoma State","Old Dominion","Ole Miss","Oregon","Oregon State","Penn State","Pittsburgh","Purdue","Rice","Rutgers","San Diego State","San Jose State","SMU","South Alabama","South Carolina","South Florida","Southern Miss","Stanford","Syracuse","TCU","Temple","Tennessee","Texas","Texas A&M","Texas State","Texas Tech","Toledo","Troy","Tulane","Tulsa","UAB","UCF","UCLA","UConn","UMass","UNLV","USC","Utah","Utah State","UTEP","UTSA","Vanderbilt","Virginia","Virginia Tech","Wake Forest","Washington","Washington State","West Virginia","Western Kentucky","Western Michigan","Wisconsin","Wyoming"];
+
+  // --- CONFERENCES (2013–2023 era grouping for game narrowing) ---
+  const CONFERENCES = {
+    "SEC":["Alabama","Arkansas","Auburn","Florida","Georgia","Kentucky","LSU","Mississippi State","Missouri","Ole Miss","South Carolina","Tennessee","Texas A&M","Vanderbilt"],
+    "Sun Belt":["Appalachian State","Arkansas State","Coastal Carolina","Georgia Southern","Georgia State","James Madison","Louisiana","Louisiana-Monroe","South Alabama","Texas State","Troy"],
+    "ACC":["Boston College","Clemson","Duke","Florida State","Georgia Tech","Louisville","Miami (FL)","NC State","North Carolina","Pittsburgh","Syracuse","Virginia","Virginia Tech","Wake Forest"],
+    "Pac-12":["Arizona","Arizona State","California","Colorado","Oregon","Oregon State","Stanford","UCLA","USC","Utah","Washington","Washington State"],
+    "Big Ten":["Illinois","Indiana","Iowa","Maryland","Michigan","Michigan State","Minnesota","Nebraska","Northwestern","Ohio State","Penn State","Purdue","Rutgers","Wisconsin"],
+    "Big 12":["Baylor","Iowa State","Kansas","Kansas State","Oklahoma","Oklahoma State","Texas","Texas Tech","TCU","West Virginia"]
+  };
+
+  // --- YEARS ---
+  const YEARS = []; for (let y=2013;y<=2025;y++){YEARS.push(y);}
+
+  // --- PUZZLES ---
+  const PUZZLES = {
+    "2019-09-14": {
+      answer: {away:"Arkansas State",home:"Georgia",year:2019},
+      conferences: {away:"Sun Belt", home:"SEC"},
+      clues: [
+        { text: "Final score: 55–0 (Home win). Week 3. Spread: Home -33 (pre-game).", tag: "Clue 1 — Final, Week & Spread" },
+        { text: "Away (final record/rank): 8–5, unranked. Home (final record/rank): 12–2, AP #4.", tag: "Clue 2 — Season Finish" },
+        { text: "Away conference: Sun Belt. Home conference: SEC.", tag: "Clue 3 — Conferences" },
+        { text: "Q2 scoring: TD 60-yd pass to Dominick Blaylock; TD 5-yd pass to Lawrence Cager; TD 48-yd pass to D’Andre Swift.", tag: "Clue 4 — Quarter TDs" },
+        { text: "Context: Home program wore pink accessories to honor a coach’s late wife.", tag: "Clue 5 — Historical Context" },
+        { text: "Starting QBs: Away — Logan Bonner; Home — Jake Fromm.", tag: "Clue 6 — Starting QBs" },
+        { text: "Notable alumni: Away — Demario Davis; Home — Herschel Walker.", tag: "Clue 7 — Alumni" }
+      ]
+    },
+    "2023-09-04": {
+      answer: {away:"Clemson",home:"Duke",year:2023},
+      conferences: {away:"ACC", home:"ACC"},
+      clues: [
+        { text: "Final score: 28–7 (Home win). Week 1. Spread: Away -12 (pre-game).", tag: "Clue 1 — Final, Week & Spread" },
+        { text: "Away (final record/rank): 9–4, unranked. Home (final record/rank): 9–4, AP #22.", tag: "Clue 2 — Season Finish" },
+        { text: "Both teams conference: ACC.", tag: "Clue 3 — Conferences" },
+        { text: "Q4 scoring: Duke — Riley Leonard 44-yd TD run; Duke — Jordan Waters 9-yd TD run.", tag: "Clue 4 — Quarter TDs" },
+        { text: "Context: Home program’s first win over an AP Top-10 opponent since 1989.", tag: "Clue 5 — Historical Context" },
+        { text: "Starting QBs: Away — Cade Klubnik; Home — Riley Leonard.", tag: "Clue 6 — Starting QBs" },
+        { text: "Notable alumni: Away — Deshaun Watson; Home — Daniel Jones.", tag: "Clue 7 — Alumni" }
+      ]
+    },
+    "2022-12-02": {
+      answer: {away:"USC",home:"Utah",year:2022},
+      conferences: {away:"Pac-12", home:"Pac-12"},
+      clues: [
+        { text: "Final score: 47–24 (Home win). Conference Championship. Spread: Away -2.5 (pre-game).", tag: "Clue 1 — Final, Week & Spread" },
+        { text: "Away (final record/rank): 11–3, AP #12. Home (final record/rank): 10–4, AP #10.", tag: "Clue 2 — Season Finish" },
+        { text: "Both teams conference: Pac-12.", tag: "Clue 3 — Conferences" },
+        { text: "Q4 scoring: Home — Ja’Quinden Jackson 53-yd TD run; Home — Thomas Yassmin 60-yd TD catch.", tag: "Clue 4 — Quarter TDs" },
+        { text: "Context: This win clinched a second straight conference title for the home team, knocking the away side out of CFP contention.", tag: "Clue 5 — Historical Context" },
+        { text: "Starting QBs: Away — Caleb Williams; Home — Cam Rising.", tag: "Clue 6 — Starting QBs" },
+        { text: "Notable alumni: Away — Reggie Bush; Home — Alex Smith.", tag: "Clue 7 — Alumni" }
+      ]
+    },
+    "2018-09-15": {
+      answer: {away:"Rutgers",home:"Kansas",year:2018},
+      conferences: {away:"Big Ten", home:"Big 12"},
+      clues: [
+        { text: "Final score: 55–14 (Home win). Week 3. Spread: Away -3 (pre-game).", tag: "Clue 1 — Final, Week & Spread" },
+        { text: "Away (final record/rank): 1–11, unranked. Home (final record/rank): 3–9, unranked.", tag: "Clue 2 — Season Finish" },
+        { text: "Away conference: Big Ten. Home conference: Big 12.", tag: "Clue 3 — Conferences" },
+        { text: "Q2 scoring: Home — Pooka Williams 18-yd TD run; Home — Steven Sims Jr. 60-yd TD catch.", tag: "Clue 4 — Quarter TDs" },
+        { text: "Context: Marked the home team’s first Power Five win in nearly three years.", tag: "Clue 5 — Historical Context" },
+        { text: "Starting QBs: Away — Artur Sitkowski; Home — Peyton Bender.", tag: "Clue 6 — Starting QBs" },
+        { text: "Notable alumni: Away — Mohamed Sanu; Home — Aqib Talib.", tag: "Clue 7 — Alumni" }
+      ]
+    }
+  };
+
+  // --- DOM helpers ---
+  const el = s=>document.querySelector(s);
+  const $away=el('#awaySel'), $home=el('#homeSel'), $year=el('#yearSel');
+  const $status=el('#status'), $clues=el('#clues');
+  const $submit=el('#submit'), $giveup=el('#giveup'), $shareBtn=el('#shareBtn');
+  const $tabs=document.querySelectorAll('.tab');
+
+  // --- State ---
+  let currentKey="2019-09-14";
+  let puzzle=null;
+  let revealed=0;
+
+  // --- UI helpers ---
+  function markSelects(aOk,hOk,yOk){
+    $away.classList.toggle('ok', aOk); $away.classList.toggle('wrong', !aOk);
+    $home.classList.toggle('ok', hOk); $home.classList.toggle('wrong', !hOk);
+    $year.classList.toggle('ok', yOk); $year.classList.toggle('wrong', !yOk);
+  }
+  function setStatus(m,t){$status.textContent=m;$status.className='status '+(t||'');}
+  function updatePartialFeedback(){
+    const aOk = $away.value===puzzle.answer.away;
+    const hOk = $home.value===puzzle.answer.home;
+    const yOk = Number($year.value)===puzzle.answer.year;
+    markSelects(aOk,hOk,yOk);
+    const parts = [aOk?"✅ Away":"❌ Away", hOk?"✅ Home":"❌ Home", yOk?"✅ Year":"❌ Year"];
+    setStatus(`Partial: ${parts.join(' · ')}`,(aOk&&hOk&&yOk)?'good':'partial');
+  }
+
+  function fillSelect(sel, placeholder, arr){
+    sel.innerHTML = `<option value="" disabled selected>${placeholder}</option>` + arr.map(v=>`<option value="${v}">${v}</option>`).join('');
+  }
+
+  // --- Render ---
+  function renderClues(){
+    $clues.innerHTML='';
+    puzzle.clues.forEach((c,i)=>{
+      const div=document.createElement('div');
+      div.className='clue'+(i<revealed?' revealed':'');
+      const tag=c.tag?`<span class="tag">${c.tag}</span> `:'';
+      div.innerHTML=(i<revealed)?`${tag}${c.text}`:`${tag}<em>Locked — wrong guess to reveal</em>`;
+      $clues.appendChild(div);
+    });
+
+    if(revealed>=3 && puzzle.conferences){
+      const awayConf=CONFERENCES[puzzle.conferences.away]||TEAMS;
+      const homeConf=CONFERENCES[puzzle.conferences.home]||TEAMS;
+      fillSelect($away, "Away team…", awayConf);
+      fillSelect($home, "Home team…", homeConf);
+    } else {
+      fillSelect($away, "Away team…", TEAMS);
+      fillSelect($home, "Home team…", TEAMS);
+    }
+    fillSelect($year, "Year…", YEARS);
+  }
+
+  function revealNext(){ if(revealed<puzzle.clues.length){ revealed++; renderClues(); } }
+
+  // --- Game flow ---
+  function lock(){ $submit.disabled=true;$away.disabled=true;$home.disabled=true;$year.disabled=true;$giveup.disabled=true;$shareBtn.disabled=false; }
+  function onCorrect(){
+    markSelects(true,true,true);
+    lock();
+    setStatus('Correct!','good');
+    revealed=puzzle.clues.length;
+    renderClues();
+  }
+  function onWrong(){
+    updatePartialFeedback();
+    setStatus('Not quite — another clue unlocked. Check the hints and your selections.','partial');
+    revealNext();
+  }
+
+  function loadGame(key){
+    currentKey=key;
+    puzzle=PUZZLES[currentKey];
+    revealed=0;
+    $submit.disabled=false;$away.disabled=false;$home.disabled=false;$year.disabled=false;$giveup.disabled=false;$shareBtn.disabled=true;
+    renderClues();
+    revealNext();
+    setStatus("","");
+  }
+
+  function init(){ loadGame(currentKey); }
+  init();
+
+  // --- Events ---
+  $submit.addEventListener('click',()=>{
+    const aOk = $away.value===puzzle.answer.away;
+    const hOk = $home.value===puzzle.answer.home;
+    const yOk = Number($year.value)===puzzle.answer.year;
+    if(aOk && hOk && yOk){ onCorrect(); }
+    else { onWrong(); }
+  });
+
+  $giveup.addEventListener('click',()=>{
+    revealed=puzzle.clues.length; renderClues(); lock();
+    setStatus('Answer: '+puzzle.answer.away+' at '+puzzle.answer.home+' '+puzzle.answer.year,'warn');
+  });
+
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      loadGame(tab.dataset.game);
+    });
+  });
+</script>
+</body>
+</html>
