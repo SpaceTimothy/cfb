@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Guess the CFB Game — Multi Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Guess the CFB Game — Multi Game</h1>
+        <div class="sub">Pick Away, Home, and Year. Wrong guesses unlock clues. Switch games with tabs below.</div>
+        <div class="tabs">
+          <div class="tab active" data-game="2019-09-14">Game #1</div>
+          <div class="tab" data-game="2023-09-04">Game #2</div>
+          <div class="tab" data-game="2022-12-02">Game #3</div>
+          <div class="tab" data-game="2018-09-15">Game #4</div>
+        </div>
+      </div>
+      <div class="pill"><span>Streak:</span> <span class="streak" id="streak">0</span></div>
+    </header>
+
+    <main class="card" style="margin-top:16px">
+      <div class="row">
+        <label for="awaySel">Away</label>
+        <select id="awaySel"></select>
+        <label for="homeSel">Home</label>
+        <select id="homeSel"></select>
+        <label for="yearSel">Year</label>
+        <select id="yearSel"></select>
+        <button id="submit">Guess</button>
+        <button id="giveup" class="secondary">Reveal</button>
+      </div>
+
+      <div id="status" class="status"></div>
+
+      <div class="clues" id="clues"></div>
+
+      <div class="footer">
+        <button id="shareBtn" class="secondary" disabled>Share result</button>
+        <div id="shareOut" class="share" style="display:none"></div>
+      </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
+...
+:root{
+  --bg:#0b0f14; --card:#111827; --muted:#6b7280; --text:#e5e7eb; --accent:#22d3ee; --good:#22c55e; --bad:#ef4444; --warn:#f59e0b;
+}
+*{box-sizing:border-box}
+body{margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Inter,sans-serif; background:linear-gradient(180deg,#0b0f14,#0b0f14 40%,#111827); color:var(--text);} 
+.wrap{max-width:920px; margin:0 auto; padding:24px;}
+header{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+h1{font-size:clamp(22px,3vw,32px); margin:0; letter-spacing:.3px}
+.sub{color:var(--muted); font-size:14px}
+.tabs{display:flex; gap:10px; margin-top:10px;}
+.tab{padding:6px 12px; border-radius:8px; cursor:pointer; background:#1f2937; color:#fff;} 
+.tab.active{background:var(--accent); color:#001016; font-weight:700}
+.card{background:var(--card); border:1px solid #1f2937; border-radius:18px; padding:18px; box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+label{color:var(--muted); font-size:13px; margin-right:4px}
+select{flex:1; min-width:120px; background:#0f172a; color:#e5e7eb; border:1px solid #243041; border-radius:12px; padding:8px 10px; font-size:15px; outline:none}
+select.ok{border-color: var(--good)}
+select.wrong{border-color: var(--bad)}
+button{background:var(--accent); color:#001016; border:none; border-radius:12px; padding:12px 16px; font-weight:700; cursor:pointer}
+button.secondary{background:#1f2937; color:#e5e7eb; border:1px solid #2b3648}
+button:disabled{opacity:.6; cursor:not-allowed}
+.clues{display:grid; gap:10px; margin-top:14px}
+.clue{background:#0f1622; border:1px dashed #223046; border-radius:14px; padding:12px; font-size:15px}
+.clue.revealed{border-style:solid}
+.tag{display:inline-block; padding:2px 8px; border-radius:999px; background:#0c1a2a; border:1px solid #1b2a3f; color:#a3b2c7; font-size:12px;}
+.status{margin-top:12px; font-weight:600}
+.status.good{color:var(--good)}
+.status.bad{color:var(--bad)}
+.status.partial{color:var(--warn)}
+.footer{margin-top:18px; display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+.share{white-space:pre-wrap; background:#0f172a; border:1px solid #223046; padding:10px; border-radius:12px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:13px}
+.muted{color:var(--muted)}
+.streak{font-weight:700}
+.pill{display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px; border:1px solid #2a3444; background:#0d1725}
+a{color:#7dd3fc}
